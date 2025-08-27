@@ -15,7 +15,7 @@ import os
 
 # --- Configuração do Banco de Dados ---
 # A URL do banco virá de uma variável de ambiente para segurança
-DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@host/db")
+DATABASE_URL = "postgresql://neondb_owner:npg_9leQDb6mqxGF@ep-soft-surf-acmo2agy-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -181,4 +181,5 @@ def deletar_tarefa(id_tarefa: int, db: Session = Depends(get_db), usuario_atual:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     db.delete(tarefa)
     db.commit()
+
     return
