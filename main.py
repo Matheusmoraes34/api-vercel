@@ -37,7 +37,6 @@ class TarefaDB(Base):
 
 Base.metadata.create_all(bind=engine)
 
-
 class TarefaBase(BaseModel):
     titulo: str
     descricao: str | None = None
@@ -103,7 +102,7 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-
+    
     usuario = db.query(UsuarioDB).filter(UsuarioDB.email == email).first()
     if usuario is None:
         raise credentials_exception
@@ -113,10 +112,13 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
 app = FastAPI(title="API de Tarefas", description="Uma API para gerenciar sua lista de tarefas.")
 
 
+
+app = FastAPI()
+
+
 @app.get("/")
 def ler_raiz():
-    return {"mensagem": "Bem-vindo à minha API de Tarefas! Use os endpoints corretos para interagir."}
-
+    return {"mensagem": "Bem-vindo à minha API de Tarefas! Até aqui deu bom professor ! ."}
 
 @app.post("/auth/registrar", response_model=Usuario, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
@@ -142,7 +144,7 @@ def login_para_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db
     access_token = criar_access_token(data={"sub": usuario.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Rotas de Tarefas
+
 @app.post("/tarefas/", response_model=Tarefa, status_code=status.HTTP_201_CREATED)
 def criar_tarefa(tarefa: TarefaCreate, db: Session = Depends(get_db), usuario_atual: UsuarioDB = Depends(get_usuario_atual)):
     nova_tarefa = TarefaDB(**tarefa.dict(), id_usuario=usuario_atual.id)
@@ -180,6 +182,4 @@ def deletar_tarefa(id_tarefa: int, db: Session = Depends(get_db), usuario_atual:
         raise HTTPException(status_code=404, detail="Tarefa não encontrada")
     db.delete(tarefa)
     db.commit()
-
     return
-
