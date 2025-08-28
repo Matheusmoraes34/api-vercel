@@ -1,6 +1,3 @@
-# Instale as dependências com:
-# pip install "fastapi[all]" passlib[bcrypt] sqlalchemy psycopg2-binary python-jose[cryptography]
-
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
@@ -13,15 +10,14 @@ from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
 
-# --- Configuração do Banco de Dados ---
-# A URL do banco virá de uma variável de ambiente para segurança
+
 DATABASE_URL = "postgresql://neondb_owner:npg_9leQDb6mqxGF@ep-soft-surf-acmo2agy-pooler.sa-east-1.aws.neon.tech/neondb?sslmode=require"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# --- Modelos SQLAlchemy (Tabelas) ---
+
 class UsuarioDB(Base):
     __tablename__ = "usuarios"
     id = Column(Integer, primary_key=True, index=True)
@@ -38,10 +34,10 @@ class TarefaDB(Base):
     id_usuario = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     dono = relationship("UsuarioDB", back_populates="tarefas")
 
-# Cria as tabelas no banco de dados (se não existirem)
+
 Base.metadata.create_all(bind=engine)
 
-# --- Esquemas Pydantic (Validação de Dados) ---
+
 class TarefaBase(BaseModel):
     titulo: str
     descricao: str | None = None
@@ -65,7 +61,7 @@ class Usuario(BaseModel):
     class Config:
         orm_mode = True
 
-# --- Segurança e Autenticação ---
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
@@ -86,7 +82,7 @@ def criar_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-# --- Dependências ---
+
 def get_db():
     db = SessionLocal()
     try:
@@ -113,12 +109,15 @@ def get_usuario_atual(token: str = Depends(oauth2_scheme), db: Session = Depends
         raise credentials_exception
     return usuario
 
-# --- Inicialização da API ---
+
 app = FastAPI(title="API de Tarefas", description="Uma API para gerenciar sua lista de tarefas.")
 
-# --- Rotas da API ---
 
-# Rota de Autenticação
+@app.get("/")
+def ler_raiz():
+    return {"mensagem": "Bem-vindo à minha API de Tarefas! Use os endpoints corretos para interagir."}
+
+
 @app.post("/auth/registrar", response_model=Usuario, status_code=status.HTTP_201_CREATED)
 def registrar_usuario(usuario: UsuarioCreate, db: Session = Depends(get_db)):
     db_usuario = db.query(UsuarioDB).filter(UsuarioDB.email == usuario.email).first()
@@ -183,3 +182,4 @@ def deletar_tarefa(id_tarefa: int, db: Session = Depends(get_db), usuario_atual:
     db.commit()
 
     return
+
